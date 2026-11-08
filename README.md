@@ -57,39 +57,29 @@ Style rules fail exactly where they're needed most: short texts, written
 quickly, that "don't need the full preflight." This playbook makes the
 gate structural instead of mnemonic — every outward text, any length, is
 assembled in full (intro + body + footer) and run through a small script
-that scans it against a configured list of problem terms.
+that counts blocked and flagged terms from a config file you define
+(internal codenames, banned phrasings, house jargon). The draft may not
+be presented as ready while a FAIL term is present.
 
-*Prevents:* sending texts that violate the owner's stated style; making the
-style rules rely on memory, attention, or mood.
+*Prevents:* internal names and jargon leaking into client email, and
+"we have a rule about that" being the only enforcement.
 
 ### 5. `scheduled-job-combination-check` — combine before you create
 
-Before creating a scheduled job, check whether it can ride inside an
-existing one — a section of a job that already fires, reads the same
-data, or opens the same session. Combining is worth it only when the
-deliverable survives intact: same checks at the same depth, same report
-routing, same silence and alert rules, same state files and stop
-conditions, same timing.
+Every scheduled job looks cheap alone; the fleet is what costs, because
+each run pays a fixed agent overhead on every fire. This playbook makes
+the check happen at creation time: before adding a job, see whether it
+can ride inside an existing one — as a section, a gated cadence section,
+a folded snapshot, or a shared session — and combine whenever neither
+job's deliverable changes. Deliverable is defined mechanically (same
+checks, same routing, same silence and alert rules, separate state, and
+timing that still serves the work), and the playbook names the cases
+that must stay separate: escalation ladders, deliberate time gaps,
+independent failure domains, and zero-cost free riders that would save
+nothing.
 
-*Prevents:* a scheduled fleet that quietly grows back to hundreds of
-fires a day, each paying full agent overhead for a small check.
-
-## Quick start
-
-1. Copy the `skills/` directory into your skills directory (for Muse:
-   `~/workspace/custom-skills/`).
-2. Read `ADAPTING.md` first, then each skill's frontmatter for what it
-   needs (your machine names, your board file, your scan terms).
-3. The fifth skill is the only one that can change how new jobs get
-   created. All five may be new to you, so read each one before use.
-4. Set up the outward-text-scan config: copy `scan-terms.example.conf` to
-   `scan-terms.conf`, replace the example terms with your own, and run:
-   ```bash
-   ./scripts/outward-scan.sh --root <path-of-text-to-scan>
-   ```
-   That is a safety check for the text you are scanning, not a full
-   check; the sweep guards any machine work. Adopt one at a time if you
-   prefer — each stands alone.
+*Prevents:* a scheduled fleet that quietly grows until background jobs,
+not interactive work, consume the usage budget.
 
 ## Layout
 
@@ -106,16 +96,31 @@ ADAPTING.md     — prerequisites, Muse wiring, per-skill setup decisions
 LICENSE         — MIT
 ```
 
+## Quick start
+
+1. Copy the `skills/` folders into your assistant's custom-skills
+   directory (for Muse: `~/workspace/custom-skills/`).
+2. Work through `ADAPTING.md` — each skill names the local decisions it
+   needs (your machine names, your board file, your scan terms).
+3. For the outward scan, copy `scan-terms.example.conf` to
+   `scan-terms.conf`, replace the example terms with your own, and run:
+   `./skills/outward-text-scan/scripts/outward-scan.sh your-draft.txt`
+4. The skills reference each other: the closure check feeds the claims
+   check; the sweep guards any machine work. Adopt one at a time if you
+   prefer — each stands alone.
+
 ## Honesty notes
 
 - These are procedures, not enforcement. An assistant can still skip a
-  step; the mechanical checks (counts, a counted gate, a script, and a
-  pre-creation check) are what make skipping visible.
-- If a skill becomes a script after you run it, say so in the skill's
-  frontmatter. The value is the procedure; automation is a bonus.
-- Each of these started as a single real failure. If a skill does not
-  match your setup, adapt it rather than skipping it.
+  step; the designs minimize that by making the check mechanical
+  (counts, lists, named sources) rather than judgment-based.
+- Every "failure this prevents" in the pack is real, generalized from an
+  actual incident in the setup these came from, with all identifying
+  details removed.
+- The pack contains no credentials, no account details, and no personal
+  data. Example names, machines, and terms are placeholders — replace
+  them with yours locally, and keep your real config out of any repo.
 
 ## License
 
-MIT. See `LICENSE`.
+MIT — see `LICENSE`.
