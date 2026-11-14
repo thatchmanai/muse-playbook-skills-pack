@@ -50,17 +50,30 @@ done < "$config"
 echo "Terms config: $config (${#fail_terms[@]} FAIL, ${#warn_terms[@]} WARN)"
 status=0
 for f in "${files[@]}"; do
-  if [ "$f" = "-" ]; then src="/dev/stdin"; label="(stdin)"; else src="$f"; label="$f"; fi
+  tmp_stdin=""
+  if [ "$f" = "-" ]; then
+    # Slurp stdin once: re-reading /dev/stdin per term hits EOF after the
+    # first term and silently reports 0 for every later term.
+    tmp_stdin="$(mktemp)"
+    cat > "$tmp_stdin"
+    src="$tmp_stdin"; label="(stdin)"
+  else
+    src="$f"; label="$f"
+    if [ ! -f "$src" ]; then echo "ERROR: input file not found: $src" >&2; exit 2; fi
+  fi
   echo "== $label"
   for t in "${fail_terms[@]}"; do
-    n=$(grep -cE "$t" "$src" 2>/dev/null || true)
+    n=$(grep -cE "$t" "$src" 2>/dev/null); grc=$?
+    if [ $grc -gt 1 ]; then echo "ERROR: grep failed (exit $grc) for term /$t/ on $label - scan aborted, no result" >&2; [ -n "$tmp_stdin" ] && rm -f "$tmp_stdin"; exit 2; fi
     echo "  FAIL-term  /$t/ : $n line(s)"
     [ "${n:-0}" -gt 0 ] && status=1
   done
   for t in "${warn_terms[@]}"; do
-    n=$(grep -cE "$t" "$src" 2>/dev/null || true)
+    n=$(grep -cE "$t" "$src" 2>/dev/null); grc=$?
+    if [ $grc -gt 1 ]; then echo "ERROR: grep failed (exit $grc) for term /$t/ on $label - scan aborted, no result" >&2; [ -n "$tmp_stdin" ] && rm -f "$tmp_stdin"; exit 2; fi
     echo "  WARN-term  /$t/ : $n line(s)"
   done
+  [ -n "$tmp_stdin" ] && rm -f "$tmp_stdin"
 done
 if [ "$status" -eq 0 ]; then echo "RESULT: PASS (no FAIL terms)"; else echo "RESULT: BLOCKED (FAIL terms present)"; fi
 exit $status

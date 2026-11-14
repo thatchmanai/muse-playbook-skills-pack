@@ -2,7 +2,7 @@
 
 Five working playbooks, generalized from a production setup where one
 assistant runs many parallel chats, scheduled jobs, and subagents against
-shared machines and accounts — and kept re-learning the same four lessons
+shared machines and accounts — and kept re-learning the same five lessons
 the hard way until each one became a written procedure with a mechanical
 check.
 

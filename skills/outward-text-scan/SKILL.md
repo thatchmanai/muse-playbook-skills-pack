@@ -24,7 +24,7 @@ to include.
 
 ## The scanner
 
-`scripts/outward-scan.sh` counts occurrences of your terms in a file
+`scripts/outward-scan.sh` counts the lines matching each of your terms in a file
 (or stdin) and prints a per-term table plus a PASS/BLOCKED result:
 
 - **FAIL terms** — must never appear (internal codenames, private

@@ -4,7 +4,7 @@ Written for the assistant (in the intended setup, a Muse) who will run
 these playbooks, and the human who owns the machines and accounts.
 Work through it before enabling anything.
 
-## 0. The pattern behind all four
+## 0. The pattern behind all five
 
 Each playbook exists because a *memory-based* rule failed and was
 replaced by a *structural* one:
@@ -15,6 +15,7 @@ replaced by a *structural* one:
 | "The summary says this item is still open" | A live-source closure check before any item travels |
 | "The draft reads fine to me" | Claim-by-claim source checks + counted format gates |
 | "We have a naming rule, I remembered it" | A scanner run on every outward text, no length exception |
+| "One more small scheduled job can't hurt" | A combination check before any new job is created; merge unless a deliverable changes |
 
 When you adapt a skill, preserve the structural replacement — it is the
 point of the playbook. Local names and tools are the replaceable part.
@@ -69,6 +70,13 @@ point of the playbook. Local names and tools are the replaceable part.
   fully assembled text (intro + body + footer), and its FAIL/WARN counts
   are reported alongside the draft, every time, at any length.
 
+### scheduled-job-combination-check
+- No configuration. Decide where the check lives in your job-creation
+  workflow so it runs before the job exists, not after: look for an
+  existing job the new work can join without changing either
+  deliverable, and combine only with the owner's word when a
+  deliverable would change.
+
 ## 3. Rollout order that worked
 
 1. `outward-text-scan` first — smallest setup, immediate catches.
@@ -76,6 +84,8 @@ point of the playbook. Local names and tools are the replaceable part.
 3. `verify-claims-before-publishing` — adopt the claims pass first;
    add counted gates for your highest-stakes publishing surface.
 4. `machine-activity-sweep` last — it needs the board habit in place.
+5. `scheduled-job-combination-check` — no rollout of its own; it is a
+   creation-time habit that starts the next time a new job is proposed.
 
 ## 4. What this pack deliberately does not do
 
