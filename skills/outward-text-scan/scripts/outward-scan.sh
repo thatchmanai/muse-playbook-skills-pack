@@ -27,12 +27,17 @@ while [ $# -gt 0 ]; do
     *) files+=("$1"); shift ;;
   esac
 done
+using_placeholder=0
 if [ -z "$config" ]; then
   if [ -f "./scan-terms.conf" ]; then config="./scan-terms.conf";
   elif [ -f "$script_dir/../scan-terms.conf" ]; then config="$script_dir/../scan-terms.conf";
-  else config="$script_dir/../scan-terms.example.conf"; fi
+  else config="$script_dir/../scan-terms.example.conf"; using_placeholder=1; fi
 fi
 if [ ! -f "$config" ]; then echo "ERROR: terms config not found: $config" >&2; exit 2; fi
+if [ ! -r "$config" ]; then echo "ERROR: terms config not readable: $config" >&2; exit 2; fi
+if [ "$using_placeholder" -eq 1 ]; then
+  echo "WARNING: *** No scan-terms.conf found — using the bundled PLACEHOLDER example config ($config). Its terms are generic placeholders, NOT your real scan terms. Copy scan-terms.example.conf to scan-terms.conf and replace every term with your own. ***" >&2
+fi
 if [ ${#files[@]} -eq 0 ]; then echo "Usage: outward-scan.sh [--config CONF] <file...|->" >&2; exit 2; fi
 
 fail_terms=(); warn_terms=(); section=""
@@ -40,14 +45,30 @@ while IFS= read -r line || [ -n "$line" ]; do
   trimmed="$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
   case "$trimmed" in
     ""|\#*) continue ;;
+  esac
+  lower="$(printf '%s' "$trimmed" | tr '[:upper:]' '[:lower:]')"
+  case "$lower" in
     "[fail]") section="fail"; continue ;;
     "[warn]") section="warn"; continue ;;
   esac
+  case "$trimmed" in
+    "["*"]") echo "ERROR: unknown section header in terms config $config: $trimmed" >&2; exit 2 ;;
+  esac
+  if [ -z "$section" ]; then
+    echo "ERROR: term before any [fail]/[warn] section header in terms config $config: $trimmed" >&2; exit 2
+  fi
   if [ "$section" = "fail" ]; then fail_terms+=("$trimmed");
   elif [ "$section" = "warn" ]; then warn_terms+=("$trimmed"); fi
 done < "$config"
+if [ $(( ${#fail_terms[@]} + ${#warn_terms[@]} )) -eq 0 ]; then
+  echo "ERROR: no terms loaded from terms config $config — refusing to report a scan with zero terms" >&2; exit 2
+fi
 
-echo "Terms config: $config (${#fail_terms[@]} FAIL, ${#warn_terms[@]} WARN)"
+if [ "$using_placeholder" -eq 1 ]; then
+  echo "Terms config: $config (PLACEHOLDER) (${#fail_terms[@]} FAIL, ${#warn_terms[@]} WARN)"
+else
+  echo "Terms config: $config (${#fail_terms[@]} FAIL, ${#warn_terms[@]} WARN)"
+fi
 status=0
 for f in "${files[@]}"; do
   tmp_stdin=""
@@ -63,13 +84,13 @@ for f in "${files[@]}"; do
   fi
   echo "== $label"
   for t in "${fail_terms[@]}"; do
-    n=$(grep -cE "$t" "$src" 2>/dev/null); grc=$?
+    n=$(grep -cE -e "$t" -- "$src" 2>/dev/null); grc=$?
     if [ $grc -gt 1 ]; then echo "ERROR: grep failed (exit $grc) for term /$t/ on $label - scan aborted, no result" >&2; [ -n "$tmp_stdin" ] && rm -f "$tmp_stdin"; exit 2; fi
     echo "  FAIL-term  /$t/ : $n line(s)"
     [ "${n:-0}" -gt 0 ] && status=1
   done
   for t in "${warn_terms[@]}"; do
-    n=$(grep -cE "$t" "$src" 2>/dev/null); grc=$?
+    n=$(grep -cE -e "$t" -- "$src" 2>/dev/null); grc=$?
     if [ $grc -gt 1 ]; then echo "ERROR: grep failed (exit $grc) for term /$t/ on $label - scan aborted, no result" >&2; [ -n "$tmp_stdin" ] && rm -f "$tmp_stdin"; exit 2; fi
     echo "  WARN-term  /$t/ : $n line(s)"
   done
