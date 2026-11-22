@@ -104,7 +104,7 @@ LICENSE         — MIT
    needs (your machine names, your board file, your scan terms).
 3. For the outward scan, copy `scan-terms.example.conf` to
    `scan-terms.conf`, replace the example terms with your own, and run:
-   `./skills/outward-text-scan/scripts/outward-scan.sh your-draft.txt`
+   `bash skills/outward-text-scan/scripts/outward-scan.sh your-draft.txt`
 4. The skills reference each other: the closure check feeds the claims
    check; the sweep guards any machine work. Adopt one at a time if you
    prefer — each stands alone.

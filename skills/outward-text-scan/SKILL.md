@@ -44,7 +44,7 @@ phrasings.
 
 ```sh
 cp scan-terms.example.conf scan-terms.conf   # then edit in your terms
-./scripts/outward-scan.sh draft.txt          # or:  ... -  for stdin
+bash scripts/outward-scan.sh draft.txt       # or:  ... -  for stdin
 ```
 
 ## Wiring the trigger
